@@ -108,9 +108,9 @@ class MovieDocumentController extends DocumentController {
             }
 
             const descriptionElement = document.getElementById('productDescription');
-            descriptionElement.textContent = result.desc;
+            descriptionElement.textContent = cleanup(result.desc);
             descriptionElement.addEventListener('select', () => {
-                presentAlertDocument('', result.desc, false, true);
+                presentAlertDocument('', descriptionElement.textContent, false, false);
             });
 
             let infoRowToAdd = '';
