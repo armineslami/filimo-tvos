@@ -12,8 +12,8 @@ import Foundation
 UserDefaults.standard.set(["fa_IR"], forKey: "AppleLanguages")
 
 _ = UIApplicationMain(
-    CommandLine.argc,
-    CommandLine.unsafeArgv,
-    nil,
-    NSStringFromClass(AppDelegate.self)
+  CommandLine.argc,
+  CommandLine.unsafeArgv,
+  nil,
+  NSStringFromClass(AppDelegate.self)
 )
