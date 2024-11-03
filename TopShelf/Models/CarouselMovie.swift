@@ -10,73 +10,76 @@ import Foundation
 import TVServices
 
 struct CarouselMovie {
-	let vitrineInfo: VitrineMovie
-	var oneDetail: MovieDetailGeneral?
-	var reviewDetail: MovieDetailReview?
+  let movie: Movie
+  var oneDetail: MovieDetailGeneral?
+  var reviewDetail: MovieDetailReview?
 }
 
 extension CarouselMovie {
-	func makeCarouselItem() -> TVTopShelfCarouselItem {
-		let item = TVTopShelfCarouselItem(identifier: vitrineInfo.uid)
+  func makeCarouselItem() -> TVTopShelfCarouselItem? {
+    guard !movie.uuid.isEmpty else { return nil }
 
-		item.title = vitrineInfo.title.persianDigits()
-		item.summary = String(htmlEncodedString: oneDetail?.description)?.persianDigits()
+    let item = TVTopShelfCarouselItem(identifier: movie.uuid)
 
-		if let categories = oneDetail?.categories {
-			item.genre = ListFormatter.persian.string(from: categories.compactMap { $0.title })
-		}
+    item.title = movie.title?.persianDigits() ?? movie.titleEn
+    item.summary = String(htmlEncodedString: movie.desc)?.persianDigits()
 
-		if let duration = oneDetail?.duration.value {
-			item.duration = TimeInterval(duration)
-		}
+    if let categories = movie.categories, !categories.isEmpty {
+      item.genre = ListFormatter.persian.string(from: categories.compactMap { $0.title })
+    }
 
-		if let trailerUrlString = reviewDetail?.data.trailer?.fileURLString {
-			item.previewVideoURL = URL(string: trailerUrlString)
-		}
+    if let duration = movie.duration, duration > 0 {
+      item.duration = TimeInterval(duration)
+    }
 
-		if let cover = vitrineInfo.poster?.big ?? vitrineInfo.picture?.big,
-			let imageURL = URL(string: cover) {
-			print(imageURL)
-			item.setImageURL(imageURL, for: .screenScale1x)
-			item.setImageURL(imageURL, for: .screenScale2x)
-		}
+    if let trailerUrlString = reviewDetail?.data.trailer?.fileURLString {
+      item.previewVideoURL = URL(string: trailerUrlString)
+    }
 
-		item.displayAction = URL(string: "\(Config.scheme)://\(vitrineInfo.uid)/display").map { TVTopShelfAction(url: $0) }
-		item.playAction = URL(string: "\(Config.scheme)://\(vitrineInfo.uid)/play").map { TVTopShelfAction(url: $0) }
+    if
+      let cover = movie.coverData?.horizontal ?? movie.thumbplay?.large ?? movie.picture?.large,
+      let imageURL = URL(string: cover) {
+      print(imageURL)
+      item.setImageURL(imageURL, for: .screenScale1x)
+      item.setImageURL(imageURL, for: .screenScale2x)
+    }
 
-		item.mediaOptions = makeCarouselMediaOptions()
-		item.namedAttributes = makeCarouselNamedAttributes()
+    item.displayAction = URL(string: "\(Config.scheme)://\(movie.uuid)/display").map { TVTopShelfAction(url: $0) }
+    item.playAction = URL(string: "\(Config.scheme)://\(movie.uuid)/play").map { TVTopShelfAction(url: $0) }
 
-		return item;
-	}
+    item.mediaOptions = makeCarouselMediaOptions()
+    item.namedAttributes = makeCarouselNamedAttributes()
 
-	private func makeCarouselMediaOptions() -> TVTopShelfCarouselItem.MediaOptions {
-		var result = TVTopShelfCarouselItem.MediaOptions()
+    return item
+  }
 
-		if vitrineInfo.isHD {
-			result.formUnion(.videoResolutionHD)
-		}
+  private func makeCarouselMediaOptions() -> TVTopShelfCarouselItem.MediaOptions {
+    var result = TVTopShelfCarouselItem.MediaOptions()
 
-		return result
-	}
+    if movie.isHD {
+      result.formUnion(.videoResolutionHD)
+    }
 
-	private func makeCarouselNamedAttributes() -> [TVTopShelfNamedAttribute] {
-		var namedAttributes = [TVTopShelfNamedAttribute]()
+    return result
+  }
 
-		if let directors = oneDetail?.directors?.compactMap({ $0.name }), !directors.isEmpty {
-			namedAttributes.append(TVTopShelfNamedAttribute(name: "کارگردان", values: directors))
-		}
+  private func makeCarouselNamedAttributes() -> [TVTopShelfNamedAttribute] {
+    var namedAttributes = [TVTopShelfNamedAttribute]()
 
-		let actorsResult = reviewDetail?.data.actors?.profiles.compactMap {
-			$0
-		}.compactMap {
-			$0.nameFa ?? $0.nameEn
-		}
+    if let directors = oneDetail?.directors?.compactMap({ $0.name }), !directors.isEmpty {
+      namedAttributes.append(TVTopShelfNamedAttribute(name: "کارگردان", values: directors))
+    }
 
-		if let actors = actorsResult, !actors.isEmpty {
-			namedAttributes.append(TVTopShelfNamedAttribute(name: "بازیگران", values: actors))
-		}
+    let actorsResult = reviewDetail?.data.actors?.profiles.compactMap {
+      $0
+    }.compactMap {
+      $0.nameFa ?? $0.nameEn
+    }
 
-		return namedAttributes
-	}
+    if let actors = actorsResult, !actors.isEmpty {
+      namedAttributes.append(TVTopShelfNamedAttribute(name: "بازیگران", values: actors))
+    }
+
+    return namedAttributes
+  }
 }
