@@ -95,7 +95,6 @@ class MovieDocumentController extends DocumentController {
 
             if (result.cover !== undefined && result.cover !== null && result.cover.length > 0) {
                 document.getElementById('movieCover').setAttribute('src', result.cover)
-                document.getElementById('movieCover2').setAttribute('src', result.cover)
 
                 document.getElementById('productBanner').removeChild(
                   document.getElementById('movieImage')
@@ -106,15 +105,12 @@ class MovieDocumentController extends DocumentController {
                 document.getElementsByTagName('productTemplate').item(0).removeChild(
                   document.getElementById('background')
                 )
-                document.getElementById('productBanner').removeChild(
-                    document.getElementById('background2')
-                )
             }
 
             const descriptionElement = document.getElementById('productDescription');
-            descriptionElement.textContent = result.desc;
+            descriptionElement.textContent = cleanup(result.desc);
             descriptionElement.addEventListener('select', () => {
-                presentAlertDocument('', result.desc, false, true);
+                presentAlertDocument('', descriptionElement.textContent, false, false);
             });
 
             let infoRowToAdd = '';

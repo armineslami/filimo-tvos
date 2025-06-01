@@ -9,23 +9,20 @@
 import Foundation
 
 struct LocalizableError {
+  static func message(for error: Error) -> String {
+    let nsError = error as NSError
+    let tvmlKitDomain = "TVMLKitErrorDomain"
 
-	static func message(for error: Error) -> String {
+    let localizedKey: String
+    switch (nsError.domain, nsError.code) {
+    case (tvmlKitDomain, 3):
+      localizedKey = NSLocalizedString("error_tvml_domain_code_3", comment: "")
+    case (tvmlKitDomain, _):
+      localizedKey = NSLocalizedString("error_tvml_domain_code_unknown", comment: "")
+    default:
+      localizedKey = NSLocalizedString("error_unknown", comment: "")
+    }
 
-		let nsError = error as NSError
-
-		let tvmlKitDomain = "TVMLKitErrorDomain"
-
-		let localizedKey: String
-		switch (nsError.domain, nsError.code) {
-		case (tvmlKitDomain, 3):
-			localizedKey = NSLocalizedString("error_tvml_domain_code_3", comment: "")
-		case (tvmlKitDomain, _):
-			localizedKey = NSLocalizedString("error_tvml_domain_code_unknown", comment: "")
-		default:
-			localizedKey = NSLocalizedString("error_unknown", comment: "")
-		}
-
-		return localizedKey
-	}
+    return localizedKey
+  }
 }

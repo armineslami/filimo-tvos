@@ -401,10 +401,61 @@ class DataParser {
             }
         }
 
-        result.rate = {};
-        result.rate.average = getSafe(() => { return responses.one.data['action_data']['rate']['movie']['percent'] }, null);
-        result.rate.count = getSafe(() => { return responses.one.data['action_data']['rate']['movie']['count'] }, null);
-        result.rate.imdb = getSafe(() => { return responses.one.data['General']['imdb_rate'] }, null);
+        const getRateDetails = (responses) => {
+            const details = getSafe( () => responses.one.data['action_data']['rate']['movie']['details'], {});
+
+            return {
+                rate1: getSafe(() => details['rate1'], 0),
+                rate2: getSafe(() => details['rate2'], 0),
+                rate3: getSafe(() => details['rate3'], 0),
+                rate4: getSafe(() => details['rate4'], 0),
+                rate5: getSafe(() => details['rate5'], 0)
+            };
+        };
+
+        const calculateWeightedAverage = (rates) => {
+            const sum = Object.values(rates).reduce((acc, val) => acc + val, 0);
+
+            if (sum === 0) return null;
+
+            const weightedSum = rates.rate1 +
+                2 * rates.rate2 +
+                3 * rates.rate3 +
+                4 * rates.rate4 +
+                5 * rates.rate5;
+
+            return Math.round(weightedSum / sum * 20);
+        };
+
+        const calculateRates = (responses) => {
+            const result = {};
+            const movieData = getSafe( () => responses.one.data['action_data']['rate']['movie'], null);
+
+            // Calculate average
+            result.average = getSafe(() => {
+                const percent = movieData?.percent;
+                if (percent !== null && percent !== undefined && percent > 0) return percent;
+
+                const rates = getRateDetails(responses);
+                return calculateWeightedAverage(rates);
+            }, null);
+
+            // Calculate count
+            result.count = getSafe(() => {
+                const count = movieData?.count;
+                if (count !== null && count !== undefined && count > 0) return count;
+
+                const rates = getRateDetails(responses);
+                return Object.values(rates).reduce((sum, rate) => sum + rate, 0);
+            }, null);
+
+            // Get IMDB rate
+            result.imdb = getSafe(() => responses.one.data['General']['imdb_rate'], null);
+
+            return result;
+        };
+
+        result.rate = calculateRates(responses);
 
         const categories = getSafe(() => { return responses.one.data['General']['categories']}, []).map((category) => {
             return cleanup(category.title);
